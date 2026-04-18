@@ -42,7 +42,7 @@ const DuplicateItem: React.FC<DuplicateItemProps> = memo(({
       // Give lossless formats a bonus so they always outrank lossy files.
       const losslessExts = ['.flac', '.wav', '.aiff', '.aif'];
       const formatBonus = (loc: string) => {
-        const ext = '.' + (loc || '').split('.').pop()!.toLowerCase();
+        const ext = '.' + ((loc || '').split('.').pop()?.toLowerCase() ?? '');
         return losslessExts.includes(ext) ? 5000 : 0;
       };
       recommended = duplicate.tracks.reduce((best: any, current: any) => {
