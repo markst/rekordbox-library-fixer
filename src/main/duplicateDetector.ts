@@ -284,7 +284,8 @@ export class DuplicateDetector {
   private calculateQualityScore(track: Track): number {
     let score = 0;
 
-    // Bitrate is most important for lossy formats
+    // Bitrate contribution (most relevant for lossy formats, but also breaks
+    // ties between lossless files when Rekordbox reports a non-zero value).
     if (track.bitrate) {score += track.bitrate * 10;}
 
     // File size as secondary indicator

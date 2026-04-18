@@ -16,8 +16,6 @@ export const LOSSLESS_EXTENSIONS: readonly string[] = ['.flac', '.wav', '.aiff',
 
 /** Returns `true` when the file extension indicates a lossless audio format. */
 export function isLossless(location: string): boolean {
-  const ext = location.includes('.')
-    ? '.' + location.split('.').pop()!.toLowerCase()
-    : '';
+  const ext = '.' + (location.split('.').pop()?.toLowerCase() ?? '');
   return LOSSLESS_EXTENSIONS.includes(ext);
 }
