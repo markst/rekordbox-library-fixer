@@ -54,7 +54,6 @@ export const FormatConverter: React.FC = () => {
     runDryRun,
     isConverting,
     startConversion,
-    cancelConversion,
   } = useFormatConverter(showNotification);
 
   const [showProgress, setShowProgress] = useState(false);
@@ -364,7 +363,6 @@ export const FormatConverter: React.FC = () => {
         isOpen={showProgress}
         onClose={() => setShowProgress(false)}
         onCancel={() => {
-          cancelConversion(Date.now().toString());
           setShowProgress(false);
         }}
       />

@@ -37,6 +37,12 @@ This is an Electron-based desktop application for managing Rekordbox DJ library 
   - **Cancellation Support**: Immediate cancellation with proper cleanup of active operations
 - `useDuplicates`: Custom hook managing duplicate detection state and operations
 - `useTrackRelocator`: State management for track relocation operations
+- `FormatConverter`: Audio format conversion with ffmpeg (FLAC/WAV/AIFF/MP3/M4A → MP3/AIFF/WAV)
+  - **ffmpeg Integration**: System ffmpeg detection and conversion via child process
+  - **Dry-Run Preview**: Preview conversion output paths before touching files
+  - **Progress Tracking**: Real-time progress with activity log and cancellation
+  - **XML Rewrite**: Updates Location, Kind, BitRate, Size in library XML with auto-backup
+- `useFormatConverter`: State management hook for conversion workflow
 - `SettingsPanel`: Configuration UI with Zustand store integration
 - **Shared UI Components**: Reusable PopoverButton, ConfidenceBadge, and other UI elements
 - **Utility Functions**: Centralized formatters for file size, duration, dates, and other data
@@ -156,6 +162,11 @@ The app uses Electron's IPC for communication between main and renderer processe
 - `autoRelocateTracks(tracks, options, libraryPath)`: Sequential auto-relocation with progress tracking
 - `cancelAutoRelocate(operationId)`: Cancel active auto-relocation operation
 - `showFileInFolder(path)`: Open file location in system file manager
+- `checkFFmpeg()`: Check if ffmpeg is available on the system
+- `dryRunConversion(data)`: Preview conversion results without modifying files
+- `convertTracks(data)`: Convert audio files and rewrite XML with updated metadata
+- `cancelConversion(operationId)`: Cancel active conversion operation
+- `onConversionProgress(callback)`: Listen for real-time conversion progress events
 
 ## State Management Architecture
 

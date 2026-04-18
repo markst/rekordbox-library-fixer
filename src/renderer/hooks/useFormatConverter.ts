@@ -215,8 +215,8 @@ export function useFormatConverter(
                 playlists: updatedLibrary.data.playlists,
               });
             }
-          } catch {
-            // Silently ignore reload errors – data will refresh on next load
+          } catch (reloadErr) {
+            console.error('Failed to reload library after conversion:', reloadErr);
           }
         }
       } else {

@@ -268,9 +268,14 @@ export class FormatConverter {
           const newSize = stats.size;
 
           // Compute approximate bitrate for the result
-          const newBitrate = options.targetFormat === 'mp3'
-            ? options.bitrate
-            : undefined;
+          let newBitrate: number | undefined;
+          if (options.targetFormat === 'mp3') {
+            newBitrate = options.bitrate;
+          } else {
+            // For lossless formats (WAV/AIFF), calculate from file size and duration
+            // Fallback: 16-bit 44.1kHz stereo ≈ 1411 kbps
+            newBitrate = 1411;
+          }
 
           const newKind = FORMAT_KIND[options.targetFormat];
 
