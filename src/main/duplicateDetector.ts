@@ -1,5 +1,6 @@
 import * as crypto from 'crypto';
 import * as fs from 'fs';
+import * as path from 'path';
 import * as mm from 'music-metadata';
 import { Track } from './rekordboxParser';
 import { Logger } from './logger';
@@ -274,7 +275,14 @@ export class DuplicateDetector {
   private calculateQualityScore(track: Track): number {
     let score = 0;
 
-    // Bitrate is most important
+    // Lossless formats always outrank lossy regardless of reported bitrate.
+    // FLAC files are VBR and Rekordbox may store BitRate as 0, which would
+    // otherwise cause MP3s to score higher even though FLAC is lossless.
+    const losslessExtensions = ['.flac', '.wav', '.aiff', '.aif'];
+    const ext = path.extname(track.location).toLowerCase();
+    if (losslessExtensions.includes(ext)) {score += 5000;}
+
+    // Bitrate is most important for lossy formats
     if (track.bitrate) {score += track.bitrate * 10;}
 
     // File size as secondary indicator

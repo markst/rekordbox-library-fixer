@@ -38,9 +38,16 @@ const DuplicateItem: React.FC<DuplicateItemProps> = memo(({
     let recommended = duplicate.tracks[0];
 
     if (resolutionStrategy === 'keep-highest-quality') {
+      // FLAC files are lossless but VBR; Rekordbox may report BitRate as 0.
+      // Give lossless formats a bonus so they always outrank lossy files.
+      const losslessExts = ['.flac', '.wav', '.aiff', '.aif'];
+      const formatBonus = (loc: string) => {
+        const ext = '.' + (loc || '').split('.').pop()!.toLowerCase();
+        return losslessExts.includes(ext) ? 5000 : 0;
+      };
       recommended = duplicate.tracks.reduce((best: any, current: any) => {
-        const bestScore = (best.bitrate || 0) + (best.size || 0) / 1000000;
-        const currentScore = (current.bitrate || 0) + (current.size || 0) / 1000000;
+        const bestScore = (best.bitrate || 0) + (best.size || 0) / 1000000 + formatBonus(best.location || '');
+        const currentScore = (current.bitrate || 0) + (current.size || 0) / 1000000 + formatBonus(current.location || '');
         return currentScore > bestScore ? current : best;
       });
     } else if (resolutionStrategy === 'keep-newest') {
