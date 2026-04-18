@@ -6,6 +6,7 @@ import { Logger } from './logger';
 import { TrackRelocator } from './trackRelocator';
 import { CloudSyncFixer } from './cloudSyncFixer';
 import { TrackOwnershipFixer } from './trackOwnershipFixer';
+import { FormatConverter } from './formatConverter';
 import { mainLogger as appLogger } from './appLogger';
 
 // Safe console logging to prevent EPIPE errors
@@ -40,6 +41,7 @@ let logger: Logger;
 let trackRelocator: TrackRelocator;
 let cloudSyncFixer: CloudSyncFixer;
 let trackOwnershipFixer: TrackOwnershipFixer;
+let formatConverter: FormatConverter;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -266,6 +268,7 @@ app.whenReady().then(async () => {
   trackRelocator = new TrackRelocator();
   cloudSyncFixer = new CloudSyncFixer();
   trackOwnershipFixer = new TrackOwnershipFixer();
+  formatConverter = new FormatConverter();
 
   // Database storage is now handled via Dexie in the renderer process
   safeConsole.log('✅ Application initialized');
@@ -1336,5 +1339,149 @@ ipcMain.handle('save-dropped-file', async (_, { content, fileName }) => {
   } catch (error) {
     safeConsole.error('❌ Failed to save dropped file:', error);
     return { success: false, error: 'Failed to save dropped file' };
+  }
+});
+
+// ─── IPC Handlers for Format Converter ────────────────────────────────────────
+
+ipcMain.handle('check-ffmpeg', async () => {
+  try {
+    const result = await formatConverter.checkFFmpeg();
+    return { success: true, data: result };
+  } catch (error) {
+    appLogger.error('Failed to check ffmpeg:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+});
+
+ipcMain.handle('dry-run-conversion', async (_, data: {
+  tracks: any[];
+  options: any;
+}) => {
+  try {
+    const preview = formatConverter.dryRun(data.tracks, data.options);
+    return { success: true, data: preview };
+  } catch (error) {
+    appLogger.error('Dry-run conversion failed:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+});
+
+ipcMain.handle('convert-tracks', async (event, data: {
+  tracks: any[];
+  options: any;
+  libraryPath: string;
+}) => {
+  appLogger.info(
+    `🔄 IPC: Converting ${data.tracks.length} tracks to ${data.options.targetFormat}`
+  );
+
+  const operationId = Date.now().toString();
+
+  try {
+    // Step 1: Convert files on disk
+    const results = await formatConverter.convertTracks(
+      data.tracks,
+      data.options,
+      operationId,
+      (progress) => {
+        if (mainWindow) {
+          mainWindow.webContents.send('conversion-progress', progress);
+        }
+      }
+    );
+
+    // Step 2: Rewrite XML with updated locations, Kind, BitRate, Size
+    const successfulResults = results.filter((r) => r.success && r.convertedPath);
+
+    if (successfulResults.length > 0 && data.libraryPath) {
+      try {
+        // Create backup of original XML
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const backupPath = `${data.libraryPath}.backup.${timestamp}`;
+        const fsSync = require('fs');
+        fsSync.copyFileSync(data.libraryPath, backupPath);
+        appLogger.info(`💾 Conversion backup created: ${backupPath}`);
+
+        // Parse current library
+        const library = await rekordboxParser.parseLibrary(data.libraryPath);
+        let tracksUpdated = 0;
+
+        for (const result of successfulResults) {
+          const track = library.tracks.get(result.trackId);
+          if (track) {
+            track.location = result.convertedPath!;
+            if (result.newSize !== undefined) {
+              track.size = result.newSize;
+            }
+            if (result.newBitrate !== undefined) {
+              track.bitrate = result.newBitrate;
+            }
+            if (result.newKind) {
+              track.kind = result.newKind;
+            }
+            library.tracks.set(result.trackId, track);
+            tracksUpdated++;
+          }
+        }
+
+        // Save updated library back to XML
+        if (tracksUpdated > 0) {
+          await rekordboxParser.saveLibrary(library, data.libraryPath);
+          appLogger.info(
+            `✅ XML updated with ${tracksUpdated} converted track references`
+          );
+          logger.logLibrarySaving(data.libraryPath, library.tracks.size);
+        }
+
+        return {
+          success: true,
+          data: {
+            results,
+            backupPath,
+            xmlUpdated: tracksUpdated > 0,
+            tracksUpdated,
+          },
+        };
+      } catch (xmlError) {
+        appLogger.error('❌ Failed to update XML after conversion:', xmlError);
+        return {
+          success: true,
+          data: {
+            results,
+            xmlUpdated: false,
+            xmlError: xmlError instanceof Error
+              ? xmlError.message
+              : 'Failed to update XML',
+          },
+        };
+      }
+    }
+
+    return { success: true, data: { results, xmlUpdated: false } };
+  } catch (error) {
+    appLogger.error('❌ Format conversion failed:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+});
+
+ipcMain.handle('cancel-conversion', async (_, operationId: string) => {
+  try {
+    formatConverter.cancelConversion(operationId);
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 });

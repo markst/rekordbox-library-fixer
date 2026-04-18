@@ -96,7 +96,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const handler = (_: any, filePaths: string[]) => callback(filePaths);
     ipcRenderer.on('native-file-dropped', handler);
     return () => ipcRenderer.removeListener('native-file-dropped', handler);
-  }
+  },
+
+  // Format Converter APIs
+  checkFFmpeg: () => ipcRenderer.invoke('check-ffmpeg'),
+  dryRunConversion: (data: { tracks: any[], options: any }) =>
+    ipcRenderer.invoke('dry-run-conversion', data),
+  convertTracks: (data: { tracks: any[], options: any, libraryPath: string }) =>
+    ipcRenderer.invoke('convert-tracks', data),
+  cancelConversion: (operationId: string) =>
+    ipcRenderer.invoke('cancel-conversion', operationId),
+  onConversionProgress: (callback: (progress: any) => void) => {
+    ipcRenderer.on('conversion-progress', (_, progress) => callback(progress));
+    return () => {
+      ipcRenderer.removeAllListeners('conversion-progress');
+    };
+  },
 });
 
 export {};

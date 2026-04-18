@@ -29,6 +29,7 @@ const pathToTab: Record<string, TabType> = {
   '/': 'duplicates',
   '/relocate': 'relocate',
   '/import': 'import',
+  '/convert': 'convert',
   '/maintenance': 'maintenance',
 };
 

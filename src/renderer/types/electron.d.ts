@@ -45,6 +45,13 @@ declare global {
       openFileDialog(options?: any): Promise<any>;
       handleNativeDrop(filePaths: string[]): Promise<any>;
       onNativeFileDrop(callback: (filePaths: string[]) => void): () => void;
+
+      // Format Converter
+      checkFFmpeg(): Promise<any>;
+      dryRunConversion(data: { tracks: any[], options: any }): Promise<any>;
+      convertTracks(data: { tracks: any[], options: any, libraryPath: string }): Promise<any>;
+      cancelConversion(operationId: string): Promise<any>;
+      onConversionProgress(callback: (progress: any) => void): () => void;
     };
   }
 }

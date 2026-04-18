@@ -1,6 +1,6 @@
 // Global types and interfaces
 
-export type TabType = 'duplicates' | 'import' | 'relocate' | 'maintenance';
+export type TabType = 'duplicates' | 'import' | 'relocate' | 'maintenance' | 'convert';
 
 export type NotificationType = 'success' | 'error' | 'info';
 
@@ -137,6 +137,62 @@ export interface OwnershipFix {
   error?: string;
 }
 
+// Format Converter types
+export type TargetFormat = 'mp3' | 'aiff' | 'wav';
+
+export interface ConversionOptions {
+  targetFormat: TargetFormat;
+  bitrate: number;
+  outputDirectory?: string;
+  deleteOriginals: boolean;
+}
+
+export interface ConversionTrack {
+  id: string;
+  name: string;
+  artist: string;
+  location: string;
+  kind?: string;
+  bitrate?: number;
+  size?: number;
+}
+
+export interface ConversionResult {
+  trackId: string;
+  trackName: string;
+  originalPath: string;
+  convertedPath?: string;
+  success: boolean;
+  error?: string;
+  newSize?: number;
+  newBitrate?: number;
+  newKind?: string;
+}
+
+export interface ConversionProgress {
+  operationId: string;
+  type:
+    | 'start'
+    | 'converting'
+    | 'converted'
+    | 'complete'
+    | 'cancelled'
+    | 'error';
+  total: number;
+  current: number;
+  successCount?: number;
+  trackName?: string;
+  trackArtist?: string;
+  message: string;
+}
+
+export interface DryRunPreview {
+  trackId: string;
+  trackName: string;
+  inputPath: string;
+  outputPath: string;
+}
+
 // Electron API types
 declare global {
   interface Window {
@@ -170,6 +226,14 @@ declare global {
       // File Drop APIs
       handleNativeDrop: (filePaths: string[]) => Promise<{ success: boolean; data?: { filePaths: string[]; filePath?: string }; error?: string }>;
       onNativeFileDrop: (callback: (filePaths: string[]) => void) => () => void;
+      // Format Converter APIs
+      checkFFmpeg: () => Promise<any>;
+      dryRunConversion: (data: { tracks: ConversionTrack[], options: ConversionOptions }) => Promise<any>;
+      convertTracks: (data: { tracks: ConversionTrack[], options: ConversionOptions, libraryPath: string }) => Promise<any>;
+      cancelConversion: (operationId: string) => Promise<any>;
+      onConversionProgress: (callback: (progress: ConversionProgress) => void) => () => void;
+      // Open external URLs
+      openExternal: (url: string) => Promise<{ success: boolean; error?: string }>;
       // Event listeners
       onShowAbout: (callback: () => void) => () => void;
     };
