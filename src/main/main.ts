@@ -4,6 +4,7 @@ import { RekordboxParser } from './rekordboxParser';
 import { DuplicateDetector } from './duplicateDetector';
 import { Logger } from './logger';
 import { TrackRelocator } from './trackRelocator';
+import { LOSSLESS_EXTENSIONS, LOSSLESS_FORMAT_BONUS } from './audioQuality';
 import { CloudSyncFixer } from './cloudSyncFixer';
 import { TrackOwnershipFixer } from './trackOwnershipFixer';
 import { mainLogger as appLogger } from './appLogger';
@@ -404,9 +405,8 @@ ipcMain.handle('resolve-duplicates', async (_, resolution: {
       if (resolution.strategy === 'keep-highest-quality') {
         // FLAC files are lossless but VBR; Rekordbox may report BitRate as 0.
         // Give lossless formats a bonus so they always outrank lossy files.
-        const losslessExts = ['.flac', '.wav', '.aiff', '.aif'];
         const formatBonus = (loc: string) =>
-          losslessExts.includes(path.extname(loc || '').toLowerCase()) ? 5000 : 0;
+          LOSSLESS_EXTENSIONS.includes(path.extname(loc || '').toLowerCase()) ? LOSSLESS_FORMAT_BONUS : 0;
         trackToKeep = tracksInSet.reduce((best: any, current: any) => {
           const bestScore = (best.bitrate || 0) + (best.size || 0) / 1000000 + formatBonus(best.location);
           const currentScore = (current.bitrate || 0) + (current.size || 0) / 1000000 + formatBonus(current.location);

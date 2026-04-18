@@ -40,10 +40,12 @@ const DuplicateItem: React.FC<DuplicateItemProps> = memo(({
     if (resolutionStrategy === 'keep-highest-quality') {
       // FLAC files are lossless but VBR; Rekordbox may report BitRate as 0.
       // Give lossless formats a bonus so they always outrank lossy files.
-      const losslessExts = ['.flac', '.wav', '.aiff', '.aif'];
+      // Mirrored from src/main/audioQuality.ts (renderer can't import main process modules).
+      const LOSSLESS_EXTENSIONS = ['.flac', '.wav', '.aiff', '.aif'];
+      const LOSSLESS_FORMAT_BONUS = 5000;
       const formatBonus = (loc: string) => {
         const ext = '.' + ((loc || '').split('.').pop()?.toLowerCase() ?? '');
-        return losslessExts.includes(ext) ? 5000 : 0;
+        return LOSSLESS_EXTENSIONS.includes(ext) ? LOSSLESS_FORMAT_BONUS : 0;
       };
       recommended = duplicate.tracks.reduce((best: any, current: any) => {
         const bestScore = (best.bitrate || 0) + (best.size || 0) / 1000000 + formatBonus(best.location || '');
