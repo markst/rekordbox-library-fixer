@@ -1,22 +1,23 @@
 /**
- * Audio quality scoring constants for duplicate resolution.
+ * Audio quality helpers for duplicate resolution.
  *
- * Lossless formats (FLAC, WAV, AIFF) are VBR and Rekordbox may store their
- * BitRate as 0. Without a format-aware bonus, a 320 kbps MP3 (score ~3200)
- * would incorrectly outrank a lossless file (score ~0).
+ * Lossless formats (FLAC, WAV, AIFF) are inherently higher quality than lossy
+ * formats (MP3, AAC, OGG) regardless of reported bitrate.  Rekordbox may store
+ * lossless VBR files with BitRate = 0, so comparing raw bitrate numbers would
+ * incorrectly rank a 320 kbps MP3 above a FLAC.
  *
- * The bonus is set high enough to always outrank the maximum realistic lossy
- * bitrate score (320 kbps × 10 = 3200) while still allowing bitrate and file
- * size to break ties between two lossless files.
+ * Rather than adding an arbitrary numeric bonus, we classify tracks into
+ * lossless vs lossy tiers.  A lossless track always wins over a lossy track.
+ * Within the same tier, bitrate, file size, and metadata richness break ties.
  */
 
 /** Extensions recognised as lossless audio formats. */
-export const LOSSLESS_EXTENSIONS = ['.flac', '.wav', '.aiff', '.aif'];
+export const LOSSLESS_EXTENSIONS: readonly string[] = ['.flac', '.wav', '.aiff', '.aif'];
 
-/**
- * Quality-score bonus added to tracks whose file extension is in
- * {@link LOSSLESS_EXTENSIONS}.  The value must exceed the maximum possible
- * lossy bitrate contribution (320 × 10 = 3 200) so that any lossless file
- * always ranks above any lossy file.
- */
-export const LOSSLESS_FORMAT_BONUS = 5000;
+/** Returns `true` when the file extension indicates a lossless audio format. */
+export function isLossless(location: string): boolean {
+  const ext = location.includes('.')
+    ? '.' + location.split('.').pop()!.toLowerCase()
+    : '';
+  return LOSSLESS_EXTENSIONS.includes(ext);
+}
