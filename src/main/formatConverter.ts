@@ -275,7 +275,6 @@ export class FormatConverter {
           if (options.targetFormat === 'mp3') {
             newBitrate = options.bitrate;
           } else {
-            // For lossless formats (WAV/AIFF), calculate from file size and duration
             // For lossless formats (WAV/AIFF), use standard CD-quality bitrate
             newBitrate = LOSSLESS_CD_BITRATE_KBPS;
           }
