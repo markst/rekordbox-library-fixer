@@ -247,9 +247,11 @@ export function useFormatConverter(
           try {
             const updatedLibrary = await window.electronAPI.parseRekordboxLibrary(libraryPath);
             if (updatedLibrary.success) {
+              // IPC preserves the Map via structured clone, so use it directly
+              // (Object.entries() on a Map returns [] and would empty the track list)
               setLibraryData({
                 libraryPath,
-                tracks: new Map(Object.entries(updatedLibrary.data.tracks)),
+                tracks: updatedLibrary.data.tracks,
                 playlists: updatedLibrary.data.playlists,
               });
             }
