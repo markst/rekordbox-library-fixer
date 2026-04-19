@@ -5,6 +5,9 @@ import { mainLogger as appLogger } from './appLogger';
 
 export type TargetFormat = 'mp3' | 'aiff' | 'wav';
 
+/** Standard CD-quality bitrate: 2 channels × 16 bits × 44 100 Hz / 1000 */
+const LOSSLESS_CD_BITRATE_KBPS = 1411;
+
 export interface ConversionOptions {
   targetFormat: TargetFormat;
   bitrate: number;          // kbps – used for mp3; ignored for wav/aiff (lossless)
@@ -273,8 +276,8 @@ export class FormatConverter {
             newBitrate = options.bitrate;
           } else {
             // For lossless formats (WAV/AIFF), calculate from file size and duration
-            // Fallback: 16-bit 44.1kHz stereo ≈ 1411 kbps
-            newBitrate = 1411;
+            // For lossless formats (WAV/AIFF), use standard CD-quality bitrate
+            newBitrate = LOSSLESS_CD_BITRATE_KBPS;
           }
 
           const newKind = FORMAT_KIND[options.targetFormat];

@@ -26,6 +26,7 @@ const FORMAT_OPTIONS: { value: TargetFormat; label: string }[] = [
 ];
 
 const BITRATE_OPTIONS = [128, 192, 256, 320];
+const MAX_DISPLAYED_TRACKS = 200;
 
 const SOURCE_FORMAT_OPTIONS = [
   { value: 'all', label: 'All Formats' },
@@ -343,7 +344,7 @@ export const FormatConverter: React.FC = () => {
             </p>
           ) : (
             <div className="max-h-[400px] overflow-y-auto space-y-1">
-              {filteredTracks.slice(0, 200).map((track) => {
+              {filteredTracks.slice(0, MAX_DISPLAYED_TRACKS).map((track) => {
                 const isSelected = selectedTrackIds.has(track.id);
                 return (
                   <div
@@ -391,9 +392,9 @@ export const FormatConverter: React.FC = () => {
                   </div>
                 );
               })}
-              {filteredTracks.length > 200 && (
+              {filteredTracks.length > MAX_DISPLAYED_TRACKS && (
                 <p className="text-xs text-te-grey-500 font-te-mono text-center py-2">
-                  Showing first 200 of {filteredTracks.length} tracks
+                  Showing first {MAX_DISPLAYED_TRACKS} of {filteredTracks.length} tracks
                 </p>
               )}
             </div>
