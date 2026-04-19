@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useAppContext } from '../AppWithRouter';
 import type {
   ConversionOptions,
@@ -19,6 +19,10 @@ export interface FormatConverterState {
   // Filtered tracks
   sourceFormatFilter: string;
   filteredTracks: ConversionTrack[];
+
+  // Selection
+  selectedTrackIds: Set<string>;
+  selectedTracks: ConversionTrack[];
 
   // Dry run
   dryRunResults: DryRunPreview[];
@@ -78,6 +82,9 @@ export function useFormatConverter(
   const [isConverting, setIsConverting] = useState(false);
   const [conversionResults, setConversionResults] = useState<ConversionResult[]>([]);
 
+  // Selection
+  const [selectedTrackIds, setSelectedTrackIds] = useState<Set<string>>(new Set());
+
   // Derive filtered tracks from library
   const filteredTracks: ConversionTrack[] = useMemo(() => {
     if (!libraryData?.tracks) return [];
@@ -97,6 +104,16 @@ export function useFormatConverter(
     });
     return result;
   }, [libraryData, sourceFormatFilter]);
+
+  // Select all filtered tracks by default when filter changes
+  useEffect(() => {
+    setSelectedTrackIds(new Set(filteredTracks.map((t) => t.id)));
+  }, [filteredTracks]);
+
+  // Derive selected tracks (only those still in the filtered list)
+  const selectedTracks: ConversionTrack[] = useMemo(() => {
+    return filteredTracks.filter((t) => selectedTrackIds.has(t.id));
+  }, [filteredTracks, selectedTrackIds]);
 
   // ── Check ffmpeg ──
   const checkFFmpeg = useCallback(async () => {
@@ -146,17 +163,38 @@ export function useFormatConverter(
     updateOption('outputDirectory', undefined);
   }, [updateOption]);
 
+  // ── Selection helpers ──
+  const toggleTrackSelection = useCallback((trackId: string) => {
+    setSelectedTrackIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(trackId)) {
+        next.delete(trackId);
+      } else {
+        next.add(trackId);
+      }
+      return next;
+    });
+  }, []);
+
+  const selectAllTracks = useCallback(() => {
+    setSelectedTrackIds(new Set(filteredTracks.map((t) => t.id)));
+  }, [filteredTracks]);
+
+  const deselectAllTracks = useCallback(() => {
+    setSelectedTrackIds(new Set());
+  }, []);
+
   // ── Dry run ──
   const runDryRun = useCallback(async () => {
-    if (filteredTracks.length === 0) {
-      showNotification('info', 'No tracks match the selected source format');
+    if (selectedTracks.length === 0) {
+      showNotification('info', 'No tracks selected');
       return;
     }
 
     setIsDryRunning(true);
     try {
       const response = await window.electronAPI.dryRunConversion({
-        tracks: filteredTracks,
+        tracks: selectedTracks,
         options,
       });
       if (response.success) {
@@ -170,12 +208,12 @@ export function useFormatConverter(
     } finally {
       setIsDryRunning(false);
     }
-  }, [filteredTracks, options, showNotification]);
+  }, [selectedTracks, options, showNotification]);
 
   // ── Convert ──
   const startConversion = useCallback(async () => {
-    if (filteredTracks.length === 0) {
-      showNotification('info', 'No tracks to convert');
+    if (selectedTracks.length === 0) {
+      showNotification('info', 'No tracks selected');
       return;
     }
 
@@ -188,7 +226,7 @@ export function useFormatConverter(
     setConversionResults([]);
     try {
       const response = await window.electronAPI.convertTracks({
-        tracks: filteredTracks,
+        tracks: selectedTracks,
         options,
         libraryPath,
       });
@@ -227,7 +265,7 @@ export function useFormatConverter(
     } finally {
       setIsConverting(false);
     }
-  }, [filteredTracks, options, libraryPath, showNotification, setLibraryData]);
+  }, [selectedTracks, options, libraryPath, showNotification, setLibraryData]);
 
   // ── Cancel ──
   const cancelConversion = useCallback(async (operationId: string) => {
@@ -256,6 +294,13 @@ export function useFormatConverter(
     sourceFormatFilter,
     setSourceFormatFilter,
     filteredTracks,
+
+    // Selection
+    selectedTrackIds,
+    selectedTracks,
+    toggleTrackSelection,
+    selectAllTracks,
+    deselectAllTracks,
 
     // Dry run
     dryRunResults,

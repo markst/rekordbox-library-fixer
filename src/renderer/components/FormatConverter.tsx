@@ -9,6 +9,8 @@ import {
   CheckCircle,
   Loader2,
   FileAudio,
+  CheckSquare,
+  Square,
 } from 'lucide-react';
 import { useAppContext } from '../AppWithRouter';
 import { useFormatConverter } from '../hooks/useFormatConverter';
@@ -49,6 +51,11 @@ export const FormatConverter: React.FC = () => {
     sourceFormatFilter,
     setSourceFormatFilter,
     filteredTracks,
+    selectedTrackIds,
+    selectedTracks,
+    toggleTrackSelection,
+    selectAllTracks,
+    deselectAllTracks,
     dryRunResults,
     isDryRunning,
     runDryRun,
@@ -79,7 +86,7 @@ export const FormatConverter: React.FC = () => {
       <PageHeader
         title="Format Converter"
         icon={RefreshCw}
-        stats={`${filteredTracks.length} tracks`}
+        stats={`${selectedTracks.length} / ${filteredTracks.length} selected`}
       />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -241,7 +248,7 @@ export const FormatConverter: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={handleDryRun}
-            disabled={isDryRunning || filteredTracks.length === 0 || ffmpegAvailable !== true}
+            disabled={isDryRunning || selectedTracks.length === 0 || ffmpegAvailable !== true}
             className="flex items-center gap-2 px-4 py-2 bg-te-grey-200 border-2 border-te-grey-400 rounded-te
                        font-te-mono text-sm uppercase tracking-wider text-te-grey-700
                        hover:bg-te-grey-300 hover:border-te-grey-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
@@ -256,7 +263,7 @@ export const FormatConverter: React.FC = () => {
 
           <button
             onClick={handleStartConversion}
-            disabled={isConverting || filteredTracks.length === 0 || ffmpegAvailable !== true}
+            disabled={isConverting || selectedTracks.length === 0 || ffmpegAvailable !== true}
             className="flex items-center gap-2 px-4 py-2 bg-te-orange border-2 border-te-orange rounded-te
                        font-te-mono text-sm uppercase tracking-wider text-te-cream
                        hover:bg-te-orange/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
@@ -266,7 +273,7 @@ export const FormatConverter: React.FC = () => {
             ) : (
               <Play className="w-4 h-4" />
             )}
-            Convert {filteredTracks.length} Tracks
+            Convert {selectedTracks.length} Track{selectedTracks.length !== 1 ? 's' : ''}
           </button>
         </div>
 
@@ -306,48 +313,84 @@ export const FormatConverter: React.FC = () => {
 
         {/* Track List */}
         <div className="card p-4">
-          <h3 className="font-te-display text-sm font-bold uppercase tracking-te-display text-te-grey-800 mb-3">
-            Matching Tracks ({filteredTracks.length})
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-te-display text-sm font-bold uppercase tracking-te-display text-te-grey-800">
+              Matching Tracks ({filteredTracks.length})
+            </h3>
+            {filteredTracks.length > 0 && (
+              <button
+                onClick={selectedTracks.length === filteredTracks.length ? deselectAllTracks : selectAllTracks}
+                className="flex items-center gap-1.5 text-xs font-te-mono uppercase tracking-wider text-te-grey-600
+                           hover:text-te-orange transition-colors"
+              >
+                {selectedTracks.length === filteredTracks.length ? (
+                  <>
+                    <CheckSquare className="w-3.5 h-3.5" />
+                    Deselect All
+                  </>
+                ) : (
+                  <>
+                    <Square className="w-3.5 h-3.5" />
+                    Select All
+                  </>
+                )}
+              </button>
+            )}
+          </div>
           {filteredTracks.length === 0 ? (
             <p className="text-sm text-te-grey-500 font-te-mono text-center py-8">
               No tracks match the selected source format
             </p>
           ) : (
             <div className="max-h-[400px] overflow-y-auto space-y-1">
-              {filteredTracks.slice(0, 200).map((track) => (
-                <div
-                  key={track.id}
-                  className="flex items-center gap-3 p-2 bg-te-grey-100 rounded-te hover:bg-te-grey-200 transition-colors"
-                >
-                  <FileAudio className="w-4 h-4 text-te-grey-400 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-te-mono text-te-grey-800 truncate">
-                      {track.name}
-                    </p>
-                    <p className="text-xs text-te-grey-500 font-te-mono truncate">
-                      {track.artist}
-                    </p>
+              {filteredTracks.slice(0, 200).map((track) => {
+                const isSelected = selectedTrackIds.has(track.id);
+                return (
+                  <div
+                    key={track.id}
+                    onClick={() => toggleTrackSelection(track.id)}
+                    className={`flex items-center gap-3 p-2 rounded-te cursor-pointer transition-colors ${
+                      isSelected
+                        ? 'bg-te-orange/10 hover:bg-te-orange/15 border border-te-orange/30'
+                        : 'bg-te-grey-100 hover:bg-te-grey-200 border border-transparent'
+                    }`}
+                  >
+                    <div className="flex-shrink-0">
+                      {isSelected ? (
+                        <CheckSquare className="w-4 h-4 text-te-orange" />
+                      ) : (
+                        <Square className="w-4 h-4 text-te-grey-400" />
+                      )}
+                    </div>
+                    <FileAudio className="w-4 h-4 text-te-grey-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-te-mono text-te-grey-800 truncate">
+                        {track.name}
+                      </p>
+                      <p className="text-xs text-te-grey-500 font-te-mono truncate">
+                        {track.artist}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      {track.kind && (
+                        <span className="text-xs text-te-grey-500 font-te-mono bg-te-grey-200 px-2 py-0.5 rounded">
+                          {track.kind}
+                        </span>
+                      )}
+                      {track.bitrate && (
+                        <span className="text-xs text-te-grey-500 font-te-mono">
+                          {track.bitrate}kbps
+                        </span>
+                      )}
+                      {track.size && (
+                        <span className="text-xs text-te-grey-500 font-te-mono">
+                          {formatFileSize(track.size)}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    {track.kind && (
-                      <span className="text-xs text-te-grey-500 font-te-mono bg-te-grey-200 px-2 py-0.5 rounded">
-                        {track.kind}
-                      </span>
-                    )}
-                    {track.bitrate && (
-                      <span className="text-xs text-te-grey-500 font-te-mono">
-                        {track.bitrate}kbps
-                      </span>
-                    )}
-                    {track.size && (
-                      <span className="text-xs text-te-grey-500 font-te-mono">
-                        {formatFileSize(track.size)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               {filteredTracks.length > 200 && (
                 <p className="text-xs text-te-grey-500 font-te-mono text-center py-2">
                   Showing first 200 of {filteredTracks.length} tracks
