@@ -38,10 +38,20 @@ const DuplicateItem: React.FC<DuplicateItemProps> = memo(({
     let recommended = duplicate.tracks[0];
 
     if (resolutionStrategy === 'keep-highest-quality') {
+      // Lossless always wins over lossy; within the same tier compare by bitrate + size.
+      // Mirrored from src/main/audioQuality.ts (renderer can't import main process modules).
+      const LOSSLESS_EXTENSIONS = ['.flac', '.wav', '.aiff', '.aif'];
+      const isLossless = (loc: string) => {
+        const ext = '.' + ((loc || '').split('.').pop()?.toLowerCase() ?? '');
+        return LOSSLESS_EXTENSIONS.includes(ext);
+      };
+      const qualityScore = (t: any) => (t.bitrate || 0) + (t.size || 0) / 1000000;
       recommended = duplicate.tracks.reduce((best: any, current: any) => {
-        const bestScore = (best.bitrate || 0) + (best.size || 0) / 1000000;
-        const currentScore = (current.bitrate || 0) + (current.size || 0) / 1000000;
-        return currentScore > bestScore ? current : best;
+        const bestLossless = isLossless(best.location || '');
+        const currentLossless = isLossless(current.location || '');
+        if (currentLossless && !bestLossless) return current;
+        if (!currentLossless && bestLossless) return best;
+        return qualityScore(current) > qualityScore(best) ? current : best;
       });
     } else if (resolutionStrategy === 'keep-newest') {
       recommended = duplicate.tracks.reduce((newest: any, current: any) => {

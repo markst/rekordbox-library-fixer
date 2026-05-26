@@ -1,6 +1,6 @@
 {
   "name": "rekordbox-library-manager",
-  "version": "0.0.5-alpha",
+  "version": "0.0.6-alpha",
   "main": "dist/main/main.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
@@ -91,6 +91,7 @@
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.62.0",
+    "recharts": "^3.7.0",
     "tailwindcss": "^3.4.10",
     "xml2js": "^0.6.2",
     "zustand": "^5.0.8"
@@ -106,6 +107,11 @@
       "dist/main/**/*",
       "package.json"
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "koraysels",
+      "repo": "rekordbox-library-fixer"
+    },
     "mac": {
       "category": "public.app-category.music",
       "icon": "assets/icons/icon.icns",
@@ -115,14 +121,16 @@
           "target": "dmg",
           "arch": [
             "x64",
-            "arm64"
+            "arm64",
+            "universal"
           ]
         },
         {
           "target": "zip",
           "arch": [
             "x64",
-            "arm64"
+            "arm64",
+            "universal"
           ]
         }
       ]
