@@ -88,20 +88,44 @@ export function useFormatConverter(
   // Derive filtered tracks from library
   const filteredTracks: ConversionTrack[] = useMemo(() => {
     if (!libraryData?.tracks) return [];
+    const tracks = libraryData.tracks;
     const result: ConversionTrack[] = [];
-    libraryData.tracks.forEach((track: any, id: string) => {
-      if (matchesFormat(track.kind, sourceFormatFilter)) {
-        result.push({
-          id,
-          name: track.name,
-          artist: track.artist,
-          location: track.location,
-          kind: track.kind,
-          bitrate: track.bitrate,
-          size: track.size,
+    try {
+      // Ensure tracks is iterable as a Map — IPC may degrade Map to plain object
+      if (tracks instanceof Map) {
+        tracks.forEach((track: any, id: string) => {
+          if (matchesFormat(track.kind, sourceFormatFilter)) {
+            result.push({
+              id,
+              name: track.name,
+              artist: track.artist,
+              location: track.location,
+              kind: track.kind,
+              bitrate: track.bitrate,
+              size: track.size,
+            });
+          }
         });
+      } else if (tracks && typeof tracks === 'object') {
+        // Fallback: tracks came through IPC as a plain object
+        console.warn('[FormatConverter] tracks is not a Map, iterating as object');
+        for (const [id, track] of Object.entries(tracks as Record<string, any>)) {
+          if (matchesFormat(track.kind, sourceFormatFilter)) {
+            result.push({
+              id,
+              name: track.name,
+              artist: track.artist,
+              location: track.location,
+              kind: track.kind,
+              bitrate: track.bitrate,
+              size: track.size,
+            });
+          }
+        }
       }
-    });
+    } catch (err) {
+      console.error('[FormatConverter] Error filtering tracks:', err);
+    }
     return result;
   }, [libraryData, sourceFormatFilter]);
 
@@ -247,12 +271,20 @@ export function useFormatConverter(
           try {
             const updatedLibrary = await window.electronAPI.parseRekordboxLibrary(libraryPath);
             if (updatedLibrary.success) {
-              // IPC preserves the Map via structured clone, so use it directly
-              // (Object.entries() on a Map returns [] and would empty the track list)
+              // Ensure tracks is a proper Map — IPC/contextBridge may degrade it
+              let tracks = updatedLibrary.data.tracks;
+              if (!(tracks instanceof Map)) {
+                console.warn('[FormatConverter] IPC returned tracks as non-Map, converting');
+                if (tracks && typeof tracks === 'object') {
+                  tracks = new Map(Object.entries(tracks));
+                } else {
+                  tracks = new Map();
+                }
+              }
               setLibraryData({
                 libraryPath,
-                tracks: updatedLibrary.data.tracks,
-                playlists: updatedLibrary.data.playlists,
+                tracks,
+                playlists: updatedLibrary.data.playlists || [],
               });
             }
           } catch (reloadErr) {
