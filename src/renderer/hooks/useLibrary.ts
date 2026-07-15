@@ -16,8 +16,19 @@ export const useLibrary = (showNotification: (type: NotificationType, message: s
 
       const result = await window.electronAPI.parseRekordboxLibrary(path);
       if (result.success) {
+        // Ensure tracks is a proper Map — IPC/contextBridge may degrade it
+        let tracks = result.data.tracks;
+        if (!(tracks instanceof Map)) {
+          console.warn('[useLibrary] IPC returned tracks as non-Map, converting');
+          tracks = new Map(
+            tracks && typeof tracks === 'object'
+              ? Object.entries(tracks)
+              : []
+          );
+          result.data.tracks = tracks;
+        }
         setLibraryData(result.data);
-        showNotification('success', `Loaded ${result.data.tracks.size} tracks from library`);
+        showNotification('success', `Loaded ${tracks.size} tracks from library`);
       } else {
         showNotification('error', result.error || 'Failed to parse library');
         // Reset path if loading failed
@@ -80,9 +91,13 @@ export const useLibrary = (showNotification: (type: NotificationType, message: s
     if (libraryData) {
       try {
         // Convert Map to array for JSON serialization
+        const tracks = libraryData.tracks;
+        const trackEntries = tracks instanceof Map
+          ? Array.from(tracks.entries())
+          : Object.entries(tracks as Record<string, any>);
         const dataToSave = {
           ...libraryData,
-          tracks: Array.from(libraryData.tracks.entries())
+          tracks: trackEntries
         };
         localStorage.setItem('rekordboxLibraryData', JSON.stringify(dataToSave));
       } catch (error) {

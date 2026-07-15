@@ -6,7 +6,8 @@ import {
     Copy,
     FolderOpen,
     X,
-    HelpCircle
+    HelpCircle,
+    RefreshCw
 } from 'lucide-react';
 import {motion} from 'framer-motion';
 import type {TabType, LibraryData} from '../types';
@@ -32,6 +33,13 @@ const navItems = [
         label: 'Auto Import',
         icon: Download,
         description: 'Automatic track importing'
+    },
+    {
+        id: 'convert' as TabType,
+        path: '/convert',
+        label: 'Format Converter',
+        icon: RefreshCw,
+        description: 'Convert audio formats (FLAC → MP3/AIFF/WAV)'
     },
     {
         id: 'maintenance' as TabType,

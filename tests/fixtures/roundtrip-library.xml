@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DJ_PLAYLISTS Version="1.0.0">
+  <PRODUCT Name="rekordbox" Version="6.0.0" Company="Pioneer DJ"/>
+  <COLLECTION Entries="4">
+    <TRACK TrackID="101" Name="Deep House Groove" Artist="DJ Alpha" Composer="Alpha Composer" Album="Deep Cuts Vol.1" Grouping="Set A" Genre="Deep House" Kind="FLAC File" Size="45000000" TotalTime="342" DiscNumber="1" TrackNumber="3" Year="2024" AverageBpm="122.50" DateAdded="2024-06-15" BitRate="1411" SampleRate="44100" Comments="Great opener" PlayCount="15" Rating="5" Location="file://localhost/Users/test/Music/Deep%20House%20Groove.flac" Remixer="Beta Remixer" Tonality="Am" Label="Deep Records" Mix="Original Mix">
+      <POSITION_MARK Type="CUE" Start="0.0" Name="Intro"/>
+      <POSITION_MARK Type="CUE" Start="32.5" Name="Drop" Num="1"/>
+      <POSITION_MARK Type="CUE" Start="128.0" Name="Breakdown" Num="2"/>
+      <POSITION_MARK Type="LOOP" Start="64.0" End="96.0" Name="Main Loop"/>
+      <POSITION_MARK Type="LOOP" Start="192.0" End="224.0" Name="Outro Loop"/>
+      <TEMPO Inizio="0.045" Bpm="122.50" Metro="4/4" Battito="1"/>
+      <TEMPO Inizio="15.123" Bpm="122.50" Metro="4/4" Battito="3"/>
+    </TRACK>
+    <TRACK TrackID="102" Name="Techno Warehouse" Artist="Producer X" Composer="" Album="Underground EP" Grouping="" Genre="Techno" Kind="MP3 File" Size="9500000" TotalTime="480" DiscNumber="0" TrackNumber="1" Year="2023" AverageBpm="135.00" DateAdded="2023-11-20" BitRate="320" SampleRate="44100" Comments="" PlayCount="42" Rating="4" Location="file://localhost/Users/test/Music/Techno%20Warehouse.mp3" Remixer="" Tonality="Dm" Label="" Mix="">
+      <POSITION_MARK Type="CUE" Start="0.0"/>
+      <POSITION_MARK Type="CUE" Start="60.0" Num="1"/>
+      <POSITION_MARK Type="CUE" Start="120.0" Num="2"/>
+      <POSITION_MARK Type="CUE" Start="240.0" Num="3"/>
+      <TEMPO Inizio="0.100" Bpm="135.00" Metro="4/4" Battito="1"/>
+    </TRACK>
+    <TRACK TrackID="103" Name="Café Dançante (Remix)" Artist="Müller &amp; Schmidt" Composer="Schmidt" Album="Spëcial Chàracters" Grouping="International" Genre="Deep House" Kind="WAV File" Size="88000000" TotalTime="420" DiscNumber="0" TrackNumber="0" Year="2025" AverageBpm="124.00" DateAdded="2025-01-10" BitRate="1411" SampleRate="48000" Comments="Unicode test: 音楽" PlayCount="3" Rating="3" Location="file://localhost/Users/test/Music/caf%C3%A9-dan%C3%A7ante.wav" Remixer="DJ Remix" Tonality="F#m" Label="World Records" Mix="Club Mix">
+      <POSITION_MARK Type="CUE" Start="0.0" Name="Start"/>
+      <POSITION_MARK Type="LOOP" Start="60.0" End="120.0" Name="Café Loop"/>
+      <TEMPO Inizio="0.000" Bpm="124.00" Metro="4/4" Battito="1"/>
+      <TEMPO Inizio="30.500" Bpm="124.00" Metro="4/4" Battito="2"/>
+      <TEMPO Inizio="60.250" Bpm="124.00" Metro="4/4" Battito="4"/>
+    </TRACK>
+    <TRACK TrackID="104" Name="Path With #Hash" Artist="Special Chars" Composer="" Album="" Grouping="" Genre="Ambient" Kind="AIFF File" Size="55000000" TotalTime="600" DiscNumber="0" TrackNumber="0" Year="0" AverageBpm="80.00" DateAdded="2025-03-01" BitRate="1411" SampleRate="44100" Comments="" PlayCount="0" Rating="0" Location="file://localhost/Users/test/Music/Path%20With%20%23Hash.aiff" Remixer="" Tonality="" Label="" Mix="">
+      <TEMPO Inizio="0.000" Bpm="80.00"/>
+    </TRACK>
+  </COLLECTION>
+  <PLAYLISTS>
+    <NODE Type="0" Name="ROOT" Count="3">
+      <NODE Name="Deep House" Type="1" KeyType="0" Entries="2">
+        <TRACK Key="101"/>
+        <TRACK Key="103"/>
+      </NODE>
+      <NODE Name="Techno" Type="1" KeyType="0" Entries="1">
+        <TRACK Key="102"/>
+      </NODE>
+      <NODE Name="Folders" Type="0" KeyType="0" Entries="1">
+        <NODE Name="Ambient" Type="1" KeyType="0" Entries="1">
+          <TRACK Key="104"/>
+        </NODE>
+      </NODE>
+    </NODE>
+  </PLAYLISTS>
+</DJ_PLAYLISTS>
